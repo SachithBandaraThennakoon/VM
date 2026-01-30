@@ -1,0 +1,24 @@
+py -3.11 -m venv venv
+venv\Scripts\activate
+
+pip install -r requirements.txt
+
+uvicorn app.main:app --reload
+
+
+
+////////////////// git ////////////////
+git rm --cached .env
+git rm --cached backend/.env
+
+git rm -r --cached backend/venv
+git rm -r --cached venv
+
+///////////////////////////////////////
+
+
+
+/////////////////frontend///////////////////////////////
+npm install @mediapipe/pose @mediapipe/camera_utils
+npm install axios
+
