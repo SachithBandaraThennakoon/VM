@@ -15,6 +15,31 @@ git rm -r --cached backend/venv
 git rm -r --cached venv
 
 ///////////////////////////////////////
+virtual-martial-master/
+│
+├── backend/                # Python backend (AI + APIs)
+│   ├── app/
+│   │   ├── main.py
+│   │   ├── config/
+│   │   ├── agents/
+│   │   ├── intelligence/
+│   │   ├── memory/
+│   │   ├── state/
+│   │   └── ethics/
+│   ├── requirements.txt
+│   └── .env
+│
+├── frontend/               # React frontend (Virtual Dojo UI)
+│   ├── src/
+│   └── package.json
+│
+├── data/                   # Logs, datasets, experiment outputs
+│
+├── docs/                   # Research notes & diagrams
+│
+├── notebooks/              # Experiments, analysis (stats / ML)
+│
+└── README.md
 
 
 

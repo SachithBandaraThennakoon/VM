@@ -15,11 +15,13 @@ const CameraFeed = ({ videoRef }) => {
         videoRef.current.muted = true;     // IMPORTANT
         videoRef.current.playsInline = true;
 
-        videoRef.current.onloadedmetadata = () => {
+        videoRef.current.onloadeddata = () => {
           videoRef.current.play().catch(() => {});
         };
+
       }
     }
+    
 
     setupCamera();
 

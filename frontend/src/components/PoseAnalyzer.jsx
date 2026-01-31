@@ -1,10 +1,15 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Pose } from "@mediapipe/pose";
-import { Camera } from "@mediapipe/camera_utils";
 
 const PoseAnalyzer = ({ videoRef, onSignals }) => {
+  const poseRef = useRef(null);
+  const runningRef = useRef(false);
+  const processingRef = useRef(false);
+  const rafRef = useRef(null);
+
   useEffect(() => {
     if (!videoRef.current) return;
+    if (poseRef.current) return; // prevent re-init
 
     const pose = new Pose({
       locateFile: (file) =>
@@ -20,40 +25,68 @@ const PoseAnalyzer = ({ videoRef, onSignals }) => {
     });
 
     pose.onResults((results) => {
+      processingRef.current = false;
+
       if (!results.poseLandmarks) return;
 
-      // VERY SIMPLE ABSTRACT METRICS
       const leftHip = results.poseLandmarks[23];
       const rightHip = results.poseLandmarks[24];
       const centerY = (leftHip.y + rightHip.y) / 2;
 
-      const stabilityScore = 1 - Math.abs(centerY - 0.5);
-
       const posture =
-        centerY < 0.45 ? "leaning_forward" :
-        centerY > 0.55 ? "leaning_back" :
-        "neutral";
+        centerY < 0.48
+          ? "leaning_forward"
+          : centerY > 0.52
+          ? "leaning_back"
+          : "neutral";
+
+      const stability = Math.max(
+        0,
+        1 - Math.abs(centerY - 0.5) * 2
+      );
 
       onSignals({
         posture,
-        stability: Number(stabilityScore.toFixed(2)),
+        stability: Number(stability.toFixed(2)),
       });
     });
 
-    const camera = new Camera(videoRef.current, {
-      onFrame: async () => {
-        await pose.send({ image: videoRef.current });
-      },
-      width: 480,
-      height: 360,
-    });
+    poseRef.current = pose;
+    runningRef.current = true;
 
-    camera.start();
+    const loop = async () => {
+      if (!runningRef.current) return;
+
+      const video = videoRef.current;
+
+      // 🔒 CRITICAL SAFETY GUARDS
+      if (
+        video &&
+        video.readyState === 4 &&
+        !processingRef.current
+      ) {
+        try {
+          processingRef.current = true;
+          await pose.send({ image: video });
+        } catch (e) {
+          processingRef.current = false;
+          console.warn("Pose skipped frame:", e);
+        }
+      }
+
+      rafRef.current = requestAnimationFrame(loop);
+    };
+
+    loop();
+
+    return () => {
+      runningRef.current = false;
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      poseRef.current = null;
+    };
   }, [videoRef, onSignals]);
 
   return null;
 };
 
 export default PoseAnalyzer;
-
-

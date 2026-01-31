@@ -1,23 +1,26 @@
 import { useRef, useState } from "react";
 import CameraFeed from "./CameraFeed";
 import PoseAnalyzer from "./PoseAnalyzer";
+import MicAnalyzer from "./MicAnalyzer";
 import { sendPerception } from "../services/api";
+
 
 const TrainingDashboard = () => {
   const videoRef = useRef(null);
 
-  // ✅ Signals from MediaPipe
   const [signals, setSignals] = useState({});
-
-  // ✅ AI feedback from backend
   const [feedback, setFeedback] = useState("");
+
+  const updateSignals = (newSignals) => {
+    setSignals((prev) => ({ ...prev, ...newSignals }));
+  };
 
   const sendToBackend = async () => {
     try {
       const payload = {
         student_id: 1,
         user_input: "I feel tense while practicing",
-        signals: signals,
+        signals,
       };
 
       const result = await sendPerception(payload);
@@ -28,18 +31,23 @@ const TrainingDashboard = () => {
   };
 
   return (
-    <div>
+    <div style={{ padding: "16px" }}>
       <h2>Virtual Martial Arts Training</h2>
+      <pre>{JSON.stringify(signals, null, 2)}</pre>
+
 
       <CameraFeed videoRef={videoRef} />
-      <PoseAnalyzer videoRef={videoRef} onSignals={setSignals} />
+
+      <PoseAnalyzer videoRef={videoRef} onSignals={updateSignals} />
+      <MicAnalyzer onSignals={updateSignals} />
 
       <div style={{ marginTop: "12px" }}>
-        <h4>Posture: {signals.posture || "-"}</h4>
-        <h4>Stability: {signals.stability ?? "-"}</h4>
+        <p>Posture: {signals.posture || "-"}</p>
+        <p>Stability: {signals.stability ?? "-"}</p>
+        <p>Voice tension: {signals.voice_tension || "-"}</p>
       </div>
 
-      <button style={{ marginTop: "12px" }} onClick={sendToBackend}>
+      <button onClick={sendToBackend} style={{ marginTop: "12px" }}>
         Ask Master
       </button>
 
